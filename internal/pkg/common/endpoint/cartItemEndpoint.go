@@ -1,8 +1,8 @@
-package endpoints
+package endpoint
 
 import (
 	"cart-api/internal/pkg/common/db/repository"
-	"cart-api/internal/pkg/common/models"
+	"cart-api/internal/pkg/common/model"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -27,17 +27,17 @@ func NewCartItemHandler(dbPool *sqlx.DB) *CartItemHandler {
 //	@Accept		json
 //	@Produce	json
 //	@Param		cartId	path		int				true	"cart id"
-//	@Param		item	body		models.ItemDto	true	"item to add"
-//	@Success	200		{object}	models.CartItem
-//	@Failure	400		{object}	models.ResponseError
-//	@Failire	500 {object} models.ResponseError
+//	@Param		item	body		model.ItemDto	true	"item to add"
+//	@Success	200		{object}	model.CartItem
+//	@Failure	400		{object}	model.ResponseError
+//	@Failire	500 {object} model.ResponseError
 //	@Router		/carts/{cartId}/items [post]
 func (c *CartItemHandler) AddToCart(repo repository.ItemRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body := req.Body
 		defer body.Close()
 
-		var dto models.ItemDto
+		var dto model.ItemDto
 
 		dec := json.NewDecoder(body)
 		dec.DisallowUnknownFields()
@@ -76,14 +76,14 @@ func (c *CartItemHandler) AddToCart(repo repository.ItemRepository) func(res htt
 //	@Param			cartId	path		int	true	"Cart id"
 //	@Param			itemId	path		int	true	"Item id"
 //	@Success		200		{array}		byte
-//	@Failure		400		{object}	models.ResponseError
+//	@Failure		400		{object}	model.ResponseError
 //	@Router			/carts/{cartId}/items/{itemId} [delete]
 func (c *CartItemHandler) RemoveFromCart(itemRepo repository.ItemRepository, cartRepo repository.ICartRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		pathCartId := req.PathValue("cartId")
 		cartId, err := strconv.Atoi(pathCartId)
 		if err != nil {
-			models.NewResponseError(http.StatusBadRequest, "Invalid cart id").ShowError(res)
+			model.NewResponseError(http.StatusBadRequest, "Invalid cart id").ShowError(res)
 			return
 		}
 		if _, err := cartRepo.GetById(cartId); err != nil {

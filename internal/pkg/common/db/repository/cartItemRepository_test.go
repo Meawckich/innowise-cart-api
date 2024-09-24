@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"cart-api/internal/pkg/common/models"
+	"cart-api/internal/pkg/common/model"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -24,7 +24,7 @@ func TestPostgresItemRepository_Delete(t *testing.T) {
 		itemId := 2
 
 		mock.ExpectBegin()
-		mock.ExpectExec("DELETE FROM cart_item WHERE id = \\$1 AND cart_id = \\$2").
+		mock.ExpectExec("DELETE FROM items WHERE id = \\$1 AND cart_id = \\$2").
 			WithArgs(itemId, cartId).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
@@ -40,7 +40,7 @@ func TestPostgresItemRepository_Delete(t *testing.T) {
 		itemId := 2
 
 		mock.ExpectBegin()
-		mock.ExpectExec("DELETE FROM cart_item WHERE id = \\$1 AND cart_id = \\$2").
+		mock.ExpectExec("DELETE FROM items WHERE id = \\$1 AND cart_id = \\$2").
 			WithArgs(itemId, cartId).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit().WillReturnError(sqlmock.ErrCancelled)
@@ -62,14 +62,14 @@ func TestPostgresItemRepository_Create(t *testing.T) {
 
 	repo := NewPostgresItemRepository(sqlxDB)
 
-	itemDto := &models.ItemDto{
+	itemDto := &model.ItemDto{
 		Product:  "Test Product",
 		Quantity: 2,
 	}
 
 	t.Run("Cart not found", func(t *testing.T) {
 		// Mock the count query
-		mock.ExpectQuery("SELECT count\\(\\*\\) FROM cart WHERE id = \\$1").
+		mock.ExpectQuery("SELECT count\\(\\id\\) FROM carts WHERE id = \\$1").
 			WithArgs(1).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0)) // No cart found
 
@@ -81,19 +81,19 @@ func TestPostgresItemRepository_Create(t *testing.T) {
 
 	t.Run("Successful creation", func(t *testing.T) {
 		// Mock the count query
-		mock.ExpectQuery("SELECT count\\(\\*\\) FROM cart WHERE id = \\$1").
+		mock.ExpectQuery("SELECT count\\(\\id\\) FROM carts WHERE id = \\$1").
 			WithArgs(1).
 			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1)) // Cart found
 
 		// Mock the insert statement
 		mock.ExpectBegin()
-		mock.ExpectExec("INSERT INTO cart_item").
+		mock.ExpectExec("INSERT INTO items").
 			WithArgs(itemDto.Product, itemDto.Quantity, 1).
 			WillReturnResult(sqlmock.NewResult(1, 1)) // Simulate successful insert
 		mock.ExpectCommit()
 
 		// Mock the select for the last inserted item
-		mock.ExpectQuery("SELECT \\* FROM cart_item ORDER BY id DESC LIMIT 1").
+		mock.ExpectQuery("SELECT \\* FROM items ORDER BY id DESC LIMIT 1").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "product", "quantity", "cart_id"}).
 				AddRow(1, itemDto.Product, itemDto.Quantity, 1))
 
@@ -101,7 +101,7 @@ func TestPostgresItemRepository_Create(t *testing.T) {
 		createdItem, err := repo.Create(*itemDto, 1)
 
 		assert.NoError(t, err)
-		assert.Equal(t, models.CartItem{Id: 1, Product: itemDto.Product, Quantity: itemDto.Quantity, Cart_id: 1}, createdItem)
+		assert.Equal(t, model.CartItem{Id: 1, Product: itemDto.Product, Quantity: itemDto.Quantity, Cart_id: 1}, createdItem)
 	})
 
 	// Ensure all expectations were met

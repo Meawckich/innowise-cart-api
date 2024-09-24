@@ -1,8 +1,8 @@
-package endpoints
+package endpoint
 
 import (
 	"bytes"
-	"cart-api/internal/pkg/common/models"
+	"cart-api/internal/pkg/common/model"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -19,11 +19,11 @@ type MockPostgresItemRepo struct {
 	mock.Mock
 }
 
-func (m *MockPostgresItemRepo) Create(item models.ItemDto, cartId int) (models.CartItem, error) {
+func (m *MockPostgresItemRepo) Create(item model.ItemDto, cartId int) (model.CartItem, error) {
 	args := m.Called()
 
-	itemDto := args.Get(0).(models.ItemDto)
-	tmp := models.CartItem{
+	itemDto := args.Get(0).(model.ItemDto)
+	tmp := model.CartItem{
 		Id:       args.Int(1),
 		Product:  itemDto.Product,
 		Quantity: itemDto.Quantity,
@@ -45,7 +45,7 @@ func TestAddToCart(t *testing.T) {
 	repo := &MockPostgresItemRepo{}
 
 	t.Run("Success_create", func(t *testing.T) {
-		dto := models.ItemDto{
+		dto := model.ItemDto{
 			Product:  "test product",
 			Quantity: 10,
 		}
@@ -65,12 +65,12 @@ func TestAddToCart(t *testing.T) {
 		res := w.Result()
 		defer res.Body.Close()
 
-		var cartItem models.CartItem
+		var cartItem model.CartItem
 		if err := json.NewDecoder(res.Body).Decode(&cartItem); err != nil {
 			t.Fatalf("Error: %v", err)
 		}
 
-		expEq := models.CartItem{
+		expEq := model.CartItem{
 			Id:       1,
 			Cart_id:  1,
 			Product:  "test product",
@@ -81,7 +81,7 @@ func TestAddToCart(t *testing.T) {
 	})
 
 	t.Run("Error_create", func(t *testing.T) {
-		dto := models.Cart{
+		dto := model.Cart{
 			Id: 1,
 		}
 

@@ -2,7 +2,7 @@ package server
 
 import (
 	"cart-api/internal/pkg/common/db/repository"
-	"cart-api/internal/pkg/common/endpoints"
+	"cart-api/internal/pkg/common/endpoint"
 	"cart-api/internal/pkg/config"
 	middleware "cart-api/internal/server/middleware"
 	"log"
@@ -28,8 +28,8 @@ func NewServer(config *config.Config, dbPool *sqlx.DB) *Server {
 }
 
 func (s *Server) registerRoutes() *http.ServeMux {
-	cartHandler := endpoints.NewCarHandler(s.pool)
-	cartItemHandler := endpoints.NewCartItemHandler(s.pool)
+	cartHandler := endpoint.NewCarHandler(s.pool)
+	cartItemHandler := endpoint.NewCartItemHandler(s.pool)
 
 	cartRepository := repository.NewPostgresCartRepository(s.pool)
 	cartItemRepository := repository.NewPostgresItemRepository(s.pool)

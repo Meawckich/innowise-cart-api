@@ -1,8 +1,8 @@
-package endpoints
+package endpoint
 
 import (
 	"cart-api/internal/pkg/common/db/repository"
-	"cart-api/internal/pkg/common/models"
+	"cart-api/internal/pkg/common/model"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -26,8 +26,8 @@ func NewCarHandler(db *sqlx.DB) *CartHandler {
 //	@Description	create cart
 //	@Tags			carts
 //	@Produce		json
-//	@Success		200	{object}	models.Cart
-//	@Failure		500	{object}	models.ResponseError
+//	@Success		200	{object}	model.Cart
+//	@Failure		500	{object}	model.ResponseError
 //	@Router			/carts [post]
 func (c *CartHandler) CreateNew(repo repository.ICartRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -51,15 +51,15 @@ func (c *CartHandler) CreateNew(repo repository.ICartRepository) func(res http.R
 //	@Description	get all carts with composition item slice inside
 //	@Tags			carts
 //	@Produce		json
-//	@Success		200	{array}		models.Cart
-//	@Failure		500	{object}	models.ResponseError
+//	@Success		200	{array}		model.Cart
+//	@Failure		500	{object}	model.ResponseError
 //	@Router			/carts [get]
 func (c *CartHandler) GetAll(repo repository.ICartRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
 		carts, err := repo.GetAll()
 
 		if err != nil {
-			models.NewResponseError(http.StatusInternalServerError, err.Error()).ShowError(res)
+			model.NewResponseError(http.StatusInternalServerError, err.Error()).ShowError(res)
 			return
 		}
 
@@ -81,9 +81,9 @@ func (c *CartHandler) GetAll(repo repository.ICartRepository) func(res http.Resp
 //	@Tags			carts
 //	@Produce		json
 //	@Param			id	path		int	true	"id to find cart"
-//	@Success		200	{object}	models.Cart
-//	@Failure		400	{object}	models.ResponseError
-//	@Failure		404	{object}	models.ResponseError
+//	@Success		200	{object}	model.Cart
+//	@Failure		400	{object}	model.ResponseError
+//	@Failure		404	{object}	model.ResponseError
 //	@Router			/carts/{id} [get]
 func (c *CartHandler) ViewCart(repo repository.ICartRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -119,8 +119,8 @@ func (c *CartHandler) ViewCart(repo repository.ICartRepository) func(res http.Re
 //	@Produce		json
 //	@Param			id	path		int	true	"Cart id"
 //	@Success		200	{array}		byte
-//	@Failure		400	{object}	models.ResponseError
-//	@Failure		500	{object}	models.ResponseError
+//	@Failure		400	{object}	model.ResponseError
+//	@Failure		500	{object}	model.ResponseError
 //	@Router			/carts/{id} [delete]
 func (c *CartHandler) DeleteCart(repository repository.ICartRepository) func(res http.ResponseWriter, req *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -128,12 +128,12 @@ func (c *CartHandler) DeleteCart(repository repository.ICartRepository) func(res
 		id, err := strconv.Atoi(pathId)
 
 		if err != nil {
-			models.NewResponseError(http.StatusBadRequest, err.Error())
+			model.NewResponseError(http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if err := repository.Delete(id); err != nil {
-			models.NewResponseError(http.StatusInternalServerError, err.Error())
+			model.NewResponseError(http.StatusInternalServerError, err.Error())
 			return
 		}
 

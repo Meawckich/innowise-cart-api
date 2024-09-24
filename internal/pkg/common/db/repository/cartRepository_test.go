@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"cart-api/internal/pkg/common/models"
+	"cart-api/internal/pkg/common/model"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -23,16 +23,16 @@ func TestPostgresCartRepository_GetById(t *testing.T) {
 
 	cartId := 1
 
-	cartItem := &models.CartItem{
+	cartItem := &model.CartItem{
 		Id:       1,
 		Cart_id:  cartId,
 		Product:  "test product",
 		Quantity: 10,
 	}
 
-	expectedCart := models.Cart{
+	expectedCart := model.Cart{
 		Id:    cartId,
-		Items: []models.CartItem{*cartItem},
+		Items: []model.CartItem{*cartItem},
 	}
 
 	t.Run("Success", func(t *testing.T) {
