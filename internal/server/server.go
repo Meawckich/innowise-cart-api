@@ -1,9 +1,9 @@
 package server
 
 import (
+	"cart-api/internal/config"
 	"cart-api/internal/pkg/common/db/repository"
 	"cart-api/internal/pkg/common/endpoint"
-	"cart-api/internal/pkg/config"
 	middleware "cart-api/internal/server/middleware"
 	"log"
 	"net/http"

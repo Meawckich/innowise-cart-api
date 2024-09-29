@@ -2,8 +2,8 @@ package main
 
 import (
 	_ "cart-api/docs"
+	"cart-api/internal/config"
 	"cart-api/internal/pkg/common/db"
-	"cart-api/internal/pkg/config"
 	"cart-api/internal/server"
 )
 
