@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"cart-api/internal/pkg/common/model"
+	"cart-api/internal/pkg/model"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"

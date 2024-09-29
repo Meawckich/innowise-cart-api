@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"bytes"
-	"cart-api/internal/pkg/common/model"
+	"cart-api/internal/pkg/model"
 	"encoding/json"
 	"errors"
 	"io"

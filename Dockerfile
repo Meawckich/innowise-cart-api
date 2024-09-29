@@ -9,7 +9,7 @@ COPY . ./
 
 # RUN go test -v ./...
 
-RUN CGO_ENABLED=0 G00S=Linux go build -o /docker-cart-api ./internal/cmd/main.go    
+RUN CGO_ENABLED=0 G00S=Linux go build -o /docker-cart-api ./cmd/main.go    
 
 # FROM build-stage AS run-test-stage
 # RUN go test -v ./...

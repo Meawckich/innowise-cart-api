@@ -1,16 +1,14 @@
 package repository
 
 import (
-	"cart-api/internal/pkg/common/model"
+	"cart-api/internal/pkg/model"
 	"errors"
 
 	"github.com/jmoiron/sqlx"
 )
 
-const IdAfterInsertMock int = 10
-
 type ICartRepository interface {
-	GetById(id int) (*model.Cart, error)
+	GetById(id int) (model.Cart, error)
 	GetAll() ([]model.Cart, error)
 	Create() (model.Cart, error)
 	Delete(id int) error
@@ -26,16 +24,16 @@ func NewPostgresCartRepository(dbPool *sqlx.DB) *PostgresCartRepository {
 	}
 }
 
-func (c *PostgresCartRepository) GetById(id int) (*model.Cart, error) {
+func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
 	existsCartIdRow := c.pool.QueryRowx("SELECT id FROM carts WHERE id = $1 LIMIT 1", id)
 	var cartId int
 
 	if err := existsCartIdRow.Scan(&cartId); err != nil {
-		return &model.Cart{}, err
+		return model.Cart{}, err
 	}
 
 	if cartId == 0 {
-		return &model.Cart{}, errors.New("cannot find cart by given id")
+		return model.Cart{}, errors.New("cannot find cart by given id")
 	}
 
 	cart := model.Cart{}
@@ -43,7 +41,7 @@ func (c *PostgresCartRepository) GetById(id int) (*model.Cart, error) {
 	itemRows, err := c.pool.Queryx("SELECT * FROM items where cart_id = $1", cartId)
 
 	if err != nil {
-		return &model.Cart{}, err
+		return model.Cart{}, err
 	}
 
 	defer itemRows.Close()
@@ -53,7 +51,7 @@ func (c *PostgresCartRepository) GetById(id int) (*model.Cart, error) {
 		var item model.CartItem
 
 		if err := itemRows.StructScan(&item); err != nil {
-			return &model.Cart{}, err
+			return model.Cart{}, err
 		}
 
 		items = append(items, item)
@@ -67,7 +65,7 @@ func (c *PostgresCartRepository) GetById(id int) (*model.Cart, error) {
 		cart.Items = items
 	}
 
-	return &cart, nil
+	return cart, nil
 }
 
 func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {

@@ -10,6 +10,7 @@ import (
 )
 
 func InitDb() (*sqlx.DB, error) {
+
 	path := viper.Get("DB_URL").(string)
 
 	pool, err := sqlx.Open("postgres", path)
