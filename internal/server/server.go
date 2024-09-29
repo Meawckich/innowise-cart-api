@@ -57,11 +57,11 @@ func (s *Server) Run() error {
 	wrappedMux := middleware.NewLoggingMiddleware(router)
 
 	muxServer := &http.Server{
-		Addr:    s.cfg.GetPort(),
+		Addr:    s.cfg.Port,
 		Handler: wrappedMux,
 	}
 
-	log.Printf("Server listen on port:  %s", s.cfg.GetPort())
+	log.Printf("Server listen on port:  %s", s.cfg.Port)
 
 	if err := muxServer.ListenAndServe(); err != nil {
 		return err

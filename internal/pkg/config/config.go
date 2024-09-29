@@ -5,16 +5,8 @@ import (
 )
 
 type Config struct {
-	port  string `mapstructure:"PORT"`
-	dbUrl string `mapstructure:"DB_URL"`
-}
-
-func (c *Config) GetPort() string {
-	return c.port
-}
-
-func (c *Config) GetUrl() string {
-	return c.dbUrl
+	Port  string `mapstructure:"PORT"`
+	DbURL string `mapstructure:"DB_URL"`
 }
 
 func InitConfig() (c Config, err error) {
@@ -28,8 +20,8 @@ func InitConfig() (c Config, err error) {
 		return
 	}
 
-	c.port = viper.Get("PORT").(string)
-	c.dbUrl = viper.Get("DB_URL").(string)
+	c.Port = viper.Get("PORT").(string)
+	c.DbURL = viper.Get("DB_URL").(string)
 
 	return
 }
