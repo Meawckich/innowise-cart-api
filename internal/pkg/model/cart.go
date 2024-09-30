@@ -1,4 +1,4 @@
-package models
+package model
 
 type Cart struct {
 	Id    int        `db:"id"`

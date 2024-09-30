@@ -1,71 +1,69 @@
 package server
 
 import (
-	"cart-api/internal/pkg/common/db/repository"
-	"cart-api/internal/pkg/common/endpoints"
-	"cart-api/internal/pkg/config"
-	middleware "cart-api/internal/server/middleware"
+	"context"
 	"log"
+
+	"cart-api/internal/config"
+
+	//"cart-api/internal/pkg/endpoint"
+	//"cart-api/internal/repository"
+
 	"net/http"
 
 	_ "cart-api/docs"
-
-	httpSwagger "github.com/swaggo/http-swagger"
-
-	"github.com/jmoiron/sqlx"
+	//httpSwagger "github.com/swaggo/http-swagger"
 )
 
 type Server struct {
-	cfg  *config.Config
-	pool *sqlx.DB
+	cfg *config.Config
+	mux *http.ServeMux
 }
 
-func NewServer(config *config.Config, dbPool *sqlx.DB) *Server {
+func NewServer(config *config.Config, mux *http.ServeMux) *Server {
 	return &Server{
-		cfg:  config,
-		pool: dbPool,
+		cfg: config,
+		mux: mux,
 	}
 }
 
-func (s *Server) registerRoutes() *http.ServeMux {
-	cartHandler := endpoints.NewCarHandler(s.pool)
-	cartItemHandler := endpoints.NewCartItemHandler(s.pool)
-
-	cartRepository := repository.NewPostgresCartRepository(s.pool)
-	cartItemRepository := repository.NewPostgresItemRepository(s.pool)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /carts", cartHandler.CreateNew(cartRepository))
-	mux.HandleFunc("GET /carts/{id}", cartHandler.ViewCart(cartRepository))
-	mux.HandleFunc("GET /carts", cartHandler.GetAll(cartRepository))
-	mux.HandleFunc("DELETE /carts/{id}", cartHandler.DeleteCart(cartRepository))
-
-	wrappedPath := middleware.NewValiDateMiddleWare(cartItemHandler.AddToCart(cartItemRepository))
-
-	mux.Handle("POST /carts/{cartId}/items", wrappedPath)
-	mux.HandleFunc("DELETE /carts/{cartId}/items/{itemId}", cartItemHandler.RemoveFromCart(cartItemRepository, cartRepository))
-	mux.Handle("GET /swagger/", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:3000/swagger/doc.json"),
-	))
-	return mux
-}
-
-func (s *Server) Run() error {
-
-	router := s.registerRoutes()
-
-	wrappedMux := middleware.NewLoggingMiddleware(router)
-
-	muxServer := &http.Server{
-		Addr:    s.cfg.GetPort(),
-		Handler: wrappedMux,
+func (s *Server) Run(ctx context.Context) error {
+	server := &http.Server{
+		Addr:    s.cfg.Port,
+		Handler: s.mux,
 	}
 
-	log.Printf("Server listen on port:  %s", s.cfg.GetPort())
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen and serve: %v", err)
+		}
+	}()
 
-	if err := muxServer.ListenAndServe(); err != nil {
-		return err
+	log.Printf("listening on %s", s.cfg.Port)
+	<-ctx.Done()
+
+	if err := server.Shutdown(context.TODO()); err != nil {
+		log.Printf("server shutdown returned an err: %v\n", err)
 	}
 
+	log.Println("final")
 	return nil
 }
+
+// func (s *Server) Run() error {
+
+// 	wrappedMux := middleware.NewLoggingMiddleware(router)
+
+// 	muxServer := &http.Server{
+// 		Addr:    s.cfg.Port,
+// 		Handler: wrappedMux,
+// 	}
+
+// 	log.Printf("Server listen on port:  %s", s.cfg.Port)
+
+// 	if err := muxServer.ListenAndServe(); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }

@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"bytes"
-	"cart-api/internal/pkg/common/models"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"cart-api/internal/pkg/model"
 )
 
 type ValidateItemMiddleware struct {
@@ -29,7 +30,7 @@ func (v *ValidateItemMiddleware) ServeHTTP(res http.ResponseWriter, req *http.Re
 
 	req.Body = io.NopCloser(bytes.NewReader(body))
 
-	var dto models.ItemDto
+	var dto model.ItemDto
 	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&dto); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return

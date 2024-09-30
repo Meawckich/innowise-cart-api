@@ -1,4 +1,4 @@
-package models
+package model
 
 type ItemDto struct {
 	Product  string `json:"product"`
