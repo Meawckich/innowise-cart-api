@@ -1,19 +1,19 @@
 package db
 
 import (
+	"database/sql"
 	"runtime"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
 )
 
-func InitDb() (*sqlx.DB, error) {
+func InitDb() (*sql.DB, error) {
 
 	path := viper.Get("DB_URL").(string)
 
-	pool, err := sqlx.Open("postgres", path)
+	pool, err := sql.Open("postgres", path)
 
 	pool.SetMaxIdleConns(1)
 	pool.SetConnMaxLifetime(2 * time.Minute)

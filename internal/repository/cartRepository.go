@@ -2,9 +2,8 @@ package repository
 
 import (
 	"cart-api/internal/pkg/model"
+	"database/sql"
 	"errors"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type ICartRepository interface {
@@ -15,30 +14,33 @@ type ICartRepository interface {
 }
 
 type PostgresCartRepository struct {
-	pool *sqlx.DB
+	pool *sql.DB
 }
 
-func NewPostgresCartRepository(dbPool *sqlx.DB) *PostgresCartRepository {
+func NewPostgresCartRepository(dbPool *sql.DB) *PostgresCartRepository {
 	return &PostgresCartRepository{
 		pool: dbPool,
 	}
 }
 
 func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
-	existsCartIdRow := c.pool.QueryRowx("SELECT id FROM carts WHERE id = $1 LIMIT 1", id)
 	var cartId int
+	row := c.pool.QueryRow("SELECT id FROM carts WHERE id = $1 LIMIT 1", id)
 
-	if err := existsCartIdRow.Scan(&cartId); err != nil {
+	if err := row.Scan(&cartId); err != nil {
 		return model.Cart{}, err
 	}
 
-	if cartId == 0 {
-		return model.Cart{}, errors.New("cannot find cart by given id")
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return model.Cart{}, errors.New("cart id now found")
+		}
+		return model.Cart{}, row.Err()
 	}
 
 	cart := model.Cart{}
 
-	itemRows, err := c.pool.Queryx("SELECT * FROM items where cart_id = $1", cartId)
+	itemRows, err := c.pool.Query("SELECT id, product, quantity, cart_id FROM items where cart_id = $1", cartId)
 
 	if err != nil {
 		return model.Cart{}, err
@@ -50,7 +52,7 @@ func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
 	for itemRows.Next() {
 		var item model.CartItem
 
-		if err := itemRows.StructScan(&item); err != nil {
+		if err := itemRows.Scan(&item.Id, &item.Product, &item.Quantity, &item.Cart_id); err != nil {
 			return model.Cart{}, err
 		}
 
@@ -70,11 +72,20 @@ func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
 
 func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {
 	var count int
-	if err := c.pool.Get(&count, "SELECT count(id) FROM carts;"); err != nil {
+	row := c.pool.QueryRow("SELECT count(id) FROM carts;")
+	if row.Err() != nil {
+		if row.Err() == sql.ErrNoRows {
+			return []model.Cart{}, errors.New("carts not found")
+		}
+		return []model.Cart{}, row.Err()
+	}
+
+	err := row.Scan(&count)
+	if err != nil {
 		return []model.Cart{}, err
 	}
 
-	rows, err := c.pool.Queryx("Select id from carts")
+	rows, err := c.pool.Query("Select id from carts")
 
 	if err != nil {
 		return []model.Cart{}, err
@@ -88,11 +99,11 @@ func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {
 	for rows.Next() {
 		cart := &model.Cart{}
 
-		if err := rows.StructScan(cart); err != nil {
+		if err := rows.Scan(&cart.Id); err != nil {
 			return []model.Cart{}, err
 		}
 
-		itemRows, err := c.pool.Queryx("SELECT id, product, quantity, cart_id FROM items where cart_id = $1", cart.Id)
+		itemRows, err := c.pool.Query("SELECT id, product, quantity, cart_id FROM items where cart_id = $1", cart.Id)
 		if err != nil {
 			break
 		}
@@ -104,7 +115,7 @@ func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {
 		for itemRows.Next() {
 
 			var item model.CartItem
-			if err := itemRows.StructScan(&item); err != nil {
+			if err := itemRows.Scan(&item.Id, &item.Product, &item.Quantity, &item.Cart_id); err != nil {
 				break
 			}
 			items = append(items, item)
@@ -125,26 +136,25 @@ func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {
 }
 
 func (c *PostgresCartRepository) Create() (model.Cart, error) {
-	tx := c.pool.MustBegin()
-	tx.MustExec("INSERT INTO carts DEFAULT VALUES")
-	if err := tx.Commit(); err != nil {
+	_, err := c.pool.Exec("INSERT INTO carts DEFAULT VALUES")
+	if err != nil {
 		return model.Cart{}, err
 	}
 
-	var createdId int
-	if err := c.pool.QueryRowx("SELECT id FROM carts ORDER BY id DESC LIMIT 1").Scan(&createdId); err != nil {
+	row := c.pool.QueryRow("SELECT id FROM carts ORDER BY id DESC LIMIT 1")
+
+	var insertedId int
+	if err := row.Scan(&insertedId); err != nil {
 		return model.Cart{}, err
 	}
+
 	items := make([]model.CartItem, 0)
 
-	return model.Cart{Id: createdId, Items: items}, nil
+	return model.Cart{Id: int(insertedId), Items: items}, nil
 }
 
 func (c *PostgresCartRepository) Delete(id int) error {
-	tx := c.pool.MustBegin()
-	tx.MustExec("DELETE FROM carts WHERE id = $1", id)
-	err := tx.Commit()
-
+	_, err := c.pool.Exec("DELETE FROM carts WHERE id = $1", id)
 	if err != nil {
 		return err
 	}
