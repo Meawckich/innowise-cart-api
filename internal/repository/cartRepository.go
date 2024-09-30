@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"cart-api/internal/pkg/model"
 	"database/sql"
 	"errors"
+
+	"cart-api/internal/pkg/model"
 )
 
 type ICartRepository interface {

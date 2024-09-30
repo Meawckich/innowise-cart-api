@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"cart-api/internal/handler/middleware"
-	"cart-api/internal/service"
 	"encoding/json"
 	"net/http"
+
+	"cart-api/internal/handler/middleware"
+	"cart-api/internal/service"
 )
 
 type ItemHandler struct {

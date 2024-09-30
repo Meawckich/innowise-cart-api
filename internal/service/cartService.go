@@ -1,10 +1,11 @@
 package service
 
 import (
-	"cart-api/internal/pkg/model"
-	"cart-api/internal/repository"
 	"net/http"
 	"strconv"
+
+	"cart-api/internal/pkg/model"
+	"cart-api/internal/repository"
 )
 
 type CartService struct {

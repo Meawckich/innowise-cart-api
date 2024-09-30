@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"cart-api/internal/service"
 	"encoding/json"
 	"net/http"
+
+	"cart-api/internal/service"
 )
 
 type CartHandler struct {

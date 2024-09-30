@@ -2,13 +2,14 @@ package middleware
 
 import (
 	"bytes"
-	"cart-api/internal/pkg/model"
 	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"cart-api/internal/pkg/model"
 )
 
 type ValidateItemMiddleware struct {

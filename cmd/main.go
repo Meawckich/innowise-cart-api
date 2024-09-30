@@ -1,6 +1,12 @@
 package main
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os/signal"
+	"syscall"
+
 	_ "cart-api/docs"
 	"cart-api/internal/config"
 	"cart-api/internal/handler"
@@ -8,11 +14,6 @@ import (
 	"cart-api/internal/repository"
 	"cart-api/internal/server"
 	"cart-api/internal/service"
-	"context"
-	"log"
-	"net/http"
-	"os/signal"
-	"syscall"
 )
 
 //	@title		Trainee cart-Api
