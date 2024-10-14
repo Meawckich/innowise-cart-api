@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"cart-api/internal/pkg/model"
 	"cart-api/internal/service"
 )
 
@@ -46,18 +48,41 @@ func (h *CartHandler) CreateCart(w http.ResponseWriter, req *http.Request) {
 //	@Produce		json
 //	@Param			id	path		int	true	"id to find cart"
 //	@Success		200	{object}	model.Cart
-//	@Failure		400	{object}	model.ResponseError
+//	@Failure		400	{object}	model.InvalidIdError
 //	@Failure		404	{object}	model.ResponseError
+//	@Failure		500
 //	@Router			/carts/{id} [get]
 func (h *CartHandler) ViewCart(w http.ResponseWriter, req *http.Request) {
-	if cart, err := h.service.ViewCart(req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	encoder := json.NewEncoder(w)
 
-		json.NewEncoder(w).Encode(cart)
+	res, err := h.service.ViewCart(req)
+
+	var reqErr *model.InvalidRequestPathError
+	var scanErr *model.ScanError
+
+	if errors.As(err, &reqErr) {
+		reqErr.Path = req.URL.Path
+
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(reqErr)
+		return
 	}
+	if errors.As(err, &scanErr) {
+		w.WriteHeader(http.StatusInternalServerError)
+		encoder.Encode(scanErr)
+		return
+	}
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		encoder.Encode(err.Error())
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
 }
 
 // ListCarts lists all existing carts with items

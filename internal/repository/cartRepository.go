@@ -25,28 +25,24 @@ func NewPostgresCartRepository(dbPool *sql.DB) *PostgresCartRepository {
 }
 
 func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
+	var result model.Cart
+
 	var cartId int
 	row := c.pool.QueryRow("SELECT id FROM carts WHERE id = $1 LIMIT 1", id)
 
 	if err := row.Scan(&cartId); err != nil {
-		return model.Cart{}, err
+		return result, model.NewInvalidRequestPathError("cannot find a cart by given id")
 	}
 
 	if row.Err() != nil {
-		if row.Err() == sql.ErrNoRows {
-			return model.Cart{}, errors.New("cart id now found")
-		}
-		return model.Cart{}, row.Err()
+		return result, row.Err()
 	}
-
-	cart := model.Cart{}
 
 	itemRows, err := c.pool.Query("SELECT id, product, quantity, cart_id FROM items where cart_id = $1", cartId)
 
 	if err != nil {
-		return model.Cart{}, err
+		return result, err
 	}
-
 	defer itemRows.Close()
 
 	var items []model.CartItem
@@ -54,21 +50,21 @@ func (c *PostgresCartRepository) GetById(id int) (model.Cart, error) {
 		var item model.CartItem
 
 		if err := itemRows.Scan(&item.Id, &item.Product, &item.Quantity, &item.Cart_id); err != nil {
-			return model.Cart{}, err
+			return result, &model.ScanError{Msg: "cannot scan carts from database instance"}
 		}
 
 		items = append(items, item)
 	}
 
-	cart.Id = id
+	result.Id = id
 
 	if len(items) == 0 {
-		cart.Items = make([]model.CartItem, 0)
+		result.Items = make([]model.CartItem, 0)
 	} else {
-		cart.Items = items
+		result.Items = items
 	}
 
-	return cart, nil
+	return result, nil
 }
 
 func (c *PostgresCartRepository) GetAll() ([]model.Cart, error) {

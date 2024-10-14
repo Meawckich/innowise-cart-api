@@ -37,14 +37,17 @@ func (s *CartService) GetCarts() ([]model.Cart, error) {
 }
 
 func (s *CartService) ViewCart(req *http.Request) (model.Cart, error) {
+	cart := model.Cart{}
+
 	idPath := req.PathValue("id")
 
 	id, err := strconv.Atoi(idPath)
 	if err != nil {
-		return model.Cart{}, err
+		return cart, err
 	}
 
-	cart, err := s.repo.GetById(id)
+	cart, err = s.repo.GetById(id)
+
 	if err != nil {
 		return cart, err
 	}
@@ -60,9 +63,5 @@ func (s *CartService) DeleteCart(req *http.Request) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
-		return err
-	}
-
-	return nil
+	return s.repo.Delete(id)
 }

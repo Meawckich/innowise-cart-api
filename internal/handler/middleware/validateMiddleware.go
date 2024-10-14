@@ -23,32 +23,48 @@ func NewValiDateMiddleWare(handlerFunc http.HandlerFunc) *ValidateItemMiddleware
 }
 
 func (v *ValidateItemMiddleware) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
+
+	encoder := json.NewEncoder(res)
+
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
+		res.WriteHeader(http.StatusBadRequest)
+		encoder.Encode("invalid body given")
+		return
 	}
 
 	req.Body = io.NopCloser(bytes.NewReader(body))
 
 	var dto model.ItemDto
-	if err := json.NewDecoder(bytes.NewReader(body)).Decode(&dto); err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
+
+	var reqErr *model.InvalidRequestBodyError
+
+	if err := json.Unmarshal(body, &dto); err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		if errors.As(err, &reqErr) {
+			encoder.Encode(reqErr)
+			return
+		} else {
+			encoder.Encode(err.Error())
+			return
+		}
 	}
 
 	if !validateProduct(dto.Product) {
-		http.Error(res, "Product cannot be blank ", http.StatusBadRequest)
+		res.WriteHeader(http.StatusBadRequest)
+		encoder.Encode("product cannot be blank")
 		return
 	}
 
 	if !validateQuantity(dto.Quantity) {
-		http.Error(res, "Quantity need to be positive", http.StatusBadRequest)
+		res.WriteHeader(http.StatusBadRequest)
+		encoder.Encode("quantity need to be positive")
 		return
 	}
 
 	valid, err := validateProductReg(dto.Product)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
